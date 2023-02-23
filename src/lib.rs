@@ -8,12 +8,18 @@ use quote::quote;
 use syn::{LitInt, parse_macro_input};
 use syn::parse::{Parse, ParseStream};
 
+fn trim_to_fr32(buff: &mut [u8; 32]) {
+    // strip last two bits, to ensure result is in Fr.
+    buff[31] &= 0b0011_1111;
+}
+
 fn gen(layer: usize) -> Vec<[u8; 32]> {
     let mut out = Vec::with_capacity(layer);
+    let mut hash = [0u8; 32];
 
     let hash_ref = sha2::Sha256::digest([0u8; 64]);
-    let mut hash = [0u8; 32];
     hash.copy_from_slice(hash_ref.as_slice());
+    trim_to_fr32(&mut hash);
     out.push(hash);
 
     for _ in 1..layer {
@@ -21,7 +27,7 @@ fn gen(layer: usize) -> Vec<[u8; 32]> {
         input[..32].copy_from_slice(&hash);
         input[32..].copy_from_slice(&hash);
         hash.copy_from_slice(sha2::Sha256::digest(input).as_slice());
-
+        trim_to_fr32(&mut hash);
         out.push(hash);
     };
     out
