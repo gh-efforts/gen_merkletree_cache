@@ -17,12 +17,7 @@ fn gen(layer: usize) -> Vec<[u8; 32]> {
     let mut out = Vec::with_capacity(layer);
     let mut hash = [0u8; 32];
 
-    let hash_ref = sha2::Sha256::digest([0u8; 64]);
-    hash.copy_from_slice(hash_ref.as_slice());
-    trim_to_fr32(&mut hash);
-    out.push(hash);
-
-    for _ in 1..layer {
+    for _ in 0..layer {
         let mut input = [0u8; 64];
         input[..32].copy_from_slice(&hash);
         input[32..].copy_from_slice(&hash);
